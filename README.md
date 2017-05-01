@@ -2,6 +2,8 @@
 A phase-based minigame API for Bukkit/Spigot servers.\
 See the examples folder for usage.
 
+JavaDocs: http://itsmas.me/jd/MasGames/index.html
+
 My idea to create this API was because of inspiration from[this spigot thread.](https://www.spigotmc.org/threads/organizing-your-minigame-code-using-fsmgasm.235786/)\
 All credits for the idea goes to Minikloon.
 
