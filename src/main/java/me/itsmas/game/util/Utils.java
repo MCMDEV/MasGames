@@ -87,6 +87,8 @@ public class Utils
      */
     private static void setRestartScript()
     {
+        setupConfig();
+
         File directory = new File(".");
 
         if (directory.isDirectory())
@@ -107,9 +109,35 @@ public class Utils
                     return;
                 }
 
-                System.err.println("[MasGames] Could not find valid restart script");
+                logErr("Could not find restart script");
             }
         }
+    }
+
+    /**
+     * Sets {@link SpigotConfig} values to their optimal settings
+     */
+    private static void setupConfig()
+    {
+        SpigotConfig.debug = false;
+    }
+
+    /**
+     * Logs a message to the console
+     * @param msg The message
+     */
+    public static void log(String msg)
+    {
+        System.out.println("[MasGames] " + msg);
+    }
+
+    /**
+     * Logs an error message to the console
+     * @param msg The message
+     */
+    public static void logErr(String msg)
+    {
+        System.err.println("[MasGame] " + msg);
     }
 
     /**

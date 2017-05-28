@@ -69,8 +69,7 @@ public class LobbyCountdownPhase extends LobbyPhase
                 return;
             }
 
-            // Play a sound every 5 seconds <= 20 seconds and every second <= 5 seconds
-            if ((countdownTime <= 20 && countdownTime % 5 == 0) || countdownTime <= 5)
+            if (shouldAnnounceTime(countdownTime))
             {
                 announceTime();
             }
@@ -78,15 +77,30 @@ public class LobbyCountdownPhase extends LobbyPhase
     }
 
     /**
+     * Whether the time should be announced in the countdown
+     * @param i The seconds before the game starts
+     * @return Whether the time should be announced
+     */
+    protected boolean shouldAnnounceTime(int i)
+    {
+        return (i <= 20 && i % 5 == 0 && i != 15) || i <= 5;
+    }
+
+    /**
      * Announces the countdown time to all players
      */
-    private void announceTime()
+    protected void announceTime()
     {
         String s = countdownTime == 1 ? "" : "s";
         game.broadcast(C.YELLOW + "The game will start in " + countdownTime + " second" + s);
 
-        game.forEachPlayer(player ->
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 2F)
-        );
+        if (game.countdownTitle)
+        {
+            game.forEachPlayer(player ->
+            {
+                player.sendTitle("", C.RED + countdownTime, 10, 20, 10);
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 2F);
+            });
+        }
     }
 }

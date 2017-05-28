@@ -2,6 +2,7 @@ package me.itsmas.game.game.phase.phases.lobby;
 
 import me.itsmas.game.game.Game;
 import me.itsmas.game.game.phase.GamePhase;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -37,6 +38,8 @@ public abstract class LobbyPhase extends GamePhase
     {
         player.teleport(game.getMap().getLobbyLocation());
 
+        player.setDisplayName(player.getName());
+
         player.getInventory().clear();
 
         player.setGameMode(GameMode.ADVENTURE);
@@ -44,6 +47,7 @@ public abstract class LobbyPhase extends GamePhase
         player.setGlowing(false);
 
         player.setHealth(20);
+
         player.setFoodLevel(20);
         player.setSaturation(20);
 
@@ -51,7 +55,8 @@ public abstract class LobbyPhase extends GamePhase
 
         // Fix potion effects and visibility
         player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
-        game.forEachPlayer(other -> other.showPlayer(player));
+
+        Bukkit.getOnlinePlayers().stream().filter(pl -> !pl.equals(player)).forEach(pl -> pl.showPlayer(player));
     }
 
     @EventHandler (priority = EventPriority.HIGHEST)

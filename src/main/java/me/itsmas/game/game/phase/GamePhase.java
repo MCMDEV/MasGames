@@ -3,6 +3,10 @@ package me.itsmas.game.game.phase;
 import com.google.common.collect.Sets;
 import me.itsmas.game.game.Game;
 import me.itsmas.game.util.Utils;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -64,8 +68,33 @@ public abstract class GamePhase implements Listener
         Utils.register(this);
 
         runRepeatingTask(this::onUpdate, 0L, 20L);
+        runRepeatingTask(this::sendActionBars, 0L, 20L);
 
         onStart();
+    }
+
+    /**
+     * Sends the relevant action bars to all players
+     */
+    protected final void sendActionBars()
+    {
+        game.forEachPlayer(this::sendActionBar);
+    }
+
+    /**
+     * Sends the relevant actionbar to a player
+     * @param player The player
+     */
+    protected final void sendActionBar(Player player)
+    {
+        String raw = getActionBar(player);
+
+        if (raw != null)
+        {
+            BaseComponent component = new TextComponent(raw);
+
+            player.spigot().sendMessage(ChatMessageType.ACTION_BAR, component);
+        }
     }
 
     /**
@@ -195,4 +224,14 @@ public abstract class GamePhase implements Listener
      * To be overridden for desired behaviour
      */
     protected void onEnd(){}
+
+    /**
+     * Gets the actionbar message to display to a player
+     * @param player The player
+     * @return The actionbar message
+     */
+    protected String getActionBar(Player player)
+    {
+        return null;
+    }
 }

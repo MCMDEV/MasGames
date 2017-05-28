@@ -57,14 +57,23 @@ public class GameMap
     {
         this.name = name;
         this.type = type;
-
+		
+		configureWorld(worldName);
+    }
+	
+    /**
+     * Configures the world options
+	 * @param worldName The name of the world
+     */
+	private void configureWorld(String worldName)
+	{
         world = new WorldCreator(worldName).createWorld();
         Bukkit.getWorlds().add(world);
 
         world.setTime(100L);
         world.setAutoSave(false);
         world.setGameRuleValue("doDaylightCycle", "false");
-    }
+	}
 
     /**
      * Whether the map has a valid world, lobby location and at least one spawnpoint
@@ -78,7 +87,7 @@ public class GameMap
     /**
      * The world for the GameMap
      */
-    private final World world;
+    private World world;
 
     /**
      * Gets the world for this GameMap

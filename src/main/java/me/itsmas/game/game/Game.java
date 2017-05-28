@@ -4,10 +4,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import me.itsmas.game.GameManager;
 import me.itsmas.game.game.phase.GamePhase;
-import me.itsmas.game.game.phase.PregamePhase;
+import me.itsmas.game.game.phase.phases.game.PregamePhase;
 import me.itsmas.game.game.phase.phases.lobby.LobbyCountdownPhase;
 import me.itsmas.game.game.phase.phases.lobby.LobbyPhase;
 import me.itsmas.game.game.phase.phases.lobby.LobbyWaitingPhase;
+import me.itsmas.game.game.team.TeamGame;
 import me.itsmas.game.map.GameMap;
 import me.itsmas.game.util.Action;
 import me.itsmas.game.util.C;
@@ -29,10 +30,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * The representation of a Game
@@ -40,6 +38,8 @@ import java.util.UUID;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class Game implements Listener
 {
+    public static final String SOLO_TEAM = "Players";
+
     /**
      * The plugin instance
      */
@@ -94,6 +94,19 @@ public abstract class Game implements Listener
 
     public GameMode gameMode = GameMode.SURVIVAL;
 
+    public boolean countdownTitle = true;
+
+    public boolean joinLeaveMessages = true;
+
+    public boolean preGameFreeze = true;
+
+    public boolean specChat = false;
+    public boolean specCmd = false;
+
+    public boolean niceDeath = true;
+
+    public boolean winnerGlow = true;
+
     public boolean deathDropItems = true;
 
     public boolean blockBreak = false;
@@ -138,7 +151,20 @@ public abstract class Game implements Listener
         Utils.register(this);
     }
 
+    /**
+     * Whether the game is ending
+     */
     private boolean ending = false;
+
+    /**
+     * Ends the game
+     * @see #endGame(Player...)
+     * @param players The winning players
+     */
+    public void endGame(Collection<Player> players)
+    {
+        endGame(players.toArray(new Player[0]));
+    }
 
     /**
      * Ends the game by kicking all players and unloading the map world
@@ -160,17 +186,40 @@ public abstract class Game implements Listener
         {
             if (gameWinners.contains(player))
             {
-                player.sendTitle(C.GOLD + C.BOLD + "WINNER", C.GREEN + "You won the game!", 10, 30, 10);
+                String[] winnerMsg = getWinnerTitle();
 
-                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 1.2F);
+                if (winnerMsg != null && winnerMsg.length == 2)
+                {
+                    player.sendTitle(winnerMsg[0], winnerMsg[1], 10, 30, 10);
+                }
 
-                player.setGlowing(true);
+                Sound winnerSound = getWinnerSound();
+
+                if (winnerSound != null)
+                {
+                    player.playSound(player.getLocation(), winnerSound, 1F, 2F);
+                }
+
+                if (winnerGlow)
+                {
+                    player.setGlowing(true);
+                }
             }
             else
             {
-                player.sendTitle(C.RED + C.BOLD + "LOSS", C.GRAY + "You lost the game", 10, 30, 10);
+                String[] loserMsg = getLoserTitle();
 
-                player.playSound(player.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1.5F);
+                if (loserMsg != null && loserMsg.length == 2)
+                {
+                    player.sendTitle(loserMsg[0], loserMsg[1], 10, 30, 10);
+                }
+
+                Sound loserSound = getLoserSound();
+
+                if (loserSound != null)
+                {
+                    player.playSound(player.getLocation(), loserSound, 1F, 1F);
+                }
             }
         }
 
@@ -179,7 +228,7 @@ public abstract class Game implements Listener
             @Override
             public void run()
             {
-                forEachPlayer(player -> player.kickPlayer(C.GREEN + C.BOLD + "The game is now over, thanks for playing!"));
+                forEachPlayer(player -> player.kickPlayer(C.GREEN + C.BOLD + "The game is over, thanks for playing!"));
                 unloadWorld();
 
                 new BukkitRunnable()
@@ -195,7 +244,45 @@ public abstract class Game implements Listener
     }
 
     /**
-     * Unloads the world this game takes place on
+     * Gets the title message displayed to the winners of a game
+     * <b>Must return an array with length 2</b>
+     * @return The title and subtitle displayed to winners
+     */
+    protected String[] getWinnerTitle()
+    {
+        return new String[] {C.GOLD + C.BOLD + "WINNER", C.GREEN + "You won the game!"};
+    }
+
+    /**
+     * Gets the sound played to winners of a game
+     * @return The sound played
+     */
+    protected Sound getWinnerSound()
+    {
+        return Sound.ENTITY_PLAYER_LEVELUP;
+    }
+
+    /**
+     * Gets the title message displayed to losers of a game
+     * <b>Must return an array with length 2</b>
+     * @return The title and subtitle displayed to losers
+     */
+    protected String[] getLoserTitle()
+    {
+        return new String[] {C.RED + C.BOLD + "LOSS", C.GRAY + "You lost the game"};
+    }
+
+    /**
+     * Gets the sound played to losers of a game
+     * @return The sound played
+     */
+    protected Sound getLoserSound()
+    {
+        return Sound.ENTITY_ENDERDRAGON_GROWL;
+    }
+
+    /**
+     * Unloads the world this game is taking place on
      */
     public final void unloadWorld()
     {
@@ -216,7 +303,7 @@ public abstract class Game implements Listener
 
         StringBuilder builder = new StringBuilder(C.GOLD + C.BOLD + "Winners: " + C.GREEN);
 
-        winners.forEach(winner -> builder.append(winner.getName()).append(", "));
+        winners.forEach(winner -> builder.append(winner.getDisplayName()).append(", "));
 
         String raw = builder.toString();
         String winnersString = raw.substring(0, raw.length() - 1);
@@ -284,7 +371,10 @@ public abstract class Game implements Listener
             player.setResourcePack(resourcePackUrl);
         }
 
-        broadcastJoinOrLeaveMessage(player, "joined");
+        if (joinLeaveMessages)
+        {
+            broadcastJoinOrLeaveMessage(player, "joined");
+        }
 
         ((LobbyPhase) currentPhase).addPlayer(player);
     }
@@ -295,15 +385,20 @@ public abstract class Game implements Listener
      */
     public final void handleLeave(Player player)
     {
+        removeFromTeam(player);
+
         if (players.remove(player.getUniqueId()))
         {
-            if (isLobby())
+            if (joinLeaveMessages)
             {
-                broadcastJoinOrLeaveMessage(player, "left");
-            }
-            else
-            {
-                broadcast(C.YELLOW + player.getName() + C.GREEN + " left the game");
+                if (isLobby())
+                {
+                    broadcastJoinOrLeaveMessage(player, "left");
+                }
+                else
+                {
+                    broadcast(C.YELLOW + player.getDisplayName() + C.GREEN + " left the game");
+                }
             }
         }
         else
@@ -321,7 +416,7 @@ public abstract class Game implements Listener
     {
         assert action.equals("joined") || action.equals("left");
 
-        broadcast(C.YELLOW + player.getName() + C.GREEN + " " + action + " the game " + C.YELLOW + "(" + getPlayersSize() + "/" + getType().getMaxPlayers() + ")");
+        broadcast(C.YELLOW + player.getDisplayName() + C.GREEN + " " + action + " the game " + C.YELLOW + "(" + getPlayersSize() + "/" + getType().getMaxPlayers() + ")");
 
         if (getPlayersSize() <= getType().getMinPlayers())
         {
@@ -339,12 +434,31 @@ public abstract class Game implements Listener
     }
 
     /**
+     * Removes a player from their team in the game
+     * @param player The player to remove
+     */
+    private void removeFromTeam(Player player)
+    {
+        if (this instanceof TeamGame)
+        {
+            ((TeamGame) this).getTeam(player).removePlayer(player);
+        }
+    }
+
+    /**
      * Eliminates a player from the game
      * @param target The player to be eliminated
      * @param slayer The player responsible for this player's elimination
      */
     protected void eliminate(Player target, Player slayer)
     {
+        if (!inProgress())
+        {
+            return;
+        }
+
+        removeFromTeam(target);
+
         UUID id = target.getUniqueId();
 
         players.remove(id);
@@ -354,17 +468,59 @@ public abstract class Game implements Listener
 
         target.getInventory().clear();
 
+        Bukkit.getOnlinePlayers().stream().filter(pl -> !pl.equals(target)).forEach(pl -> pl.hidePlayer(target));
         forEachPlayer(other -> other.hidePlayer(target));
 
         target.sendTitle(C.RED + C.BOLD + "Eliminated", C.GRAY + "You are now spectating", 10, 30, 10);
         target.sendMessage(C.RED + C.BOLD + "You were eliminated from the game");
 
-        broadcast(C.YELLOW + target.getName() + C.YELLOW + C.RED + " was eliminated" + (slayer == null ? "" : " by " + slayer.getName()));
+        String broadcast = getEliminationMessage(target, slayer);
 
-        forEachPlayer(player -> player.playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_IMPACT, 1F, 2F));
+        if (broadcast != null)
+        {
+            broadcast(broadcast);
+        }
+
+        Sound sound = getEliminationSound();
+
+        if (sound != null)
+        {
+            forEachPlayer(player -> player.playSound(player.getLocation(), sound, 1F, 2F));
+        }
 
         target.setGameMode(GameMode.SPECTATOR);
         target.getVelocity().multiply(new Vector(0, 0.5, 0));
+    }
+
+    /**
+     * Gets the message to broadcast when a player is eliminated
+     * @see #eliminate(Player, Player)
+     * @param target The player being eliminated
+     * @param slayer The player eliminating the target
+     * @return The elimination message
+     */
+    protected String getEliminationMessage(Player target, Player slayer)
+    {
+        return C.YELLOW + target.getDisplayName() + C.YELLOW + C.RED + " was eliminated" + (slayer == null ? "" : " by " + C.YELLOW + slayer.getDisplayName());
+    }
+
+    /**
+     * Gets the sound played to all players when a player is eliminated
+     * @return The elimination sound
+     */
+    protected Sound getEliminationSound()
+    {
+        return Sound.ENTITY_LIGHTNING_IMPACT;
+    }
+
+    /**
+     * Gets whether a player is playing the game by {@link UUID}
+     * @param id The UUID of the player
+     * @return Whether the player is playing the game
+     */
+    public final boolean isPlaying(UUID id)
+    {
+        return players.contains(id);
     }
 
     /**
@@ -374,7 +530,7 @@ public abstract class Game implements Listener
      */
     public final boolean isPlaying(Player player)
     {
-        return players.contains(player.getUniqueId());
+        return isPlaying(player.getUniqueId());
     }
 
     /**
@@ -418,16 +574,6 @@ public abstract class Game implements Listener
 
             assignPhase();
         }
-    }
-
-    /**
-     * Reverts the game to the last phase
-     */
-    public final void previousPhase()
-    {
-        phaseIndex--;
-
-        assignPhase();
     }
 
     /**
@@ -536,7 +682,7 @@ public abstract class Game implements Listener
      * @param spectators Whether to include spectators in the set
      * @return The set of players in the game
      */
-    public  Set<Player> getPlayers(boolean spectators)
+    public Set<Player> getPlayers(boolean spectators)
     {
         Set<Player> players;
 
@@ -549,12 +695,12 @@ public abstract class Game implements Listener
     }
 
     /* Events */
-    @EventHandler (priority = EventPriority.HIGHEST)
+    @EventHandler (priority = EventPriority.HIGH)
     public void onChat(AsyncPlayerChatEvent event)
     {
         Player player = event.getPlayer();
 
-        if (isSpectating(player) && !player.isOp())
+        if (isSpectating(player) && !player.isOp() && !specChat)
         {
             event.setCancelled(true);
             player.sendMessage(C.GRAY + "Spectators may not talk");
@@ -567,7 +713,7 @@ public abstract class Game implements Listener
         Player player = event.getPlayer();
         String command = event.getMessage().split(" ")[0].substring(1);
 
-        if (isSpectating(player))
+        if (isSpectating(player) && !specCmd)
         {
             if (!player.isOp() && !command.equalsIgnoreCase("leave"))
             {
@@ -586,18 +732,14 @@ public abstract class Game implements Listener
     @EventHandler
     public void onDeathDamage(EntityDamageEvent event)
     {
-        if (event.getEntity() instanceof Player)
+        if (niceDeath && event.getEntity() instanceof Player)
         {
             Player player = (Player) event.getEntity();
 
-            if (deathDropItems && player.getHealth() - event.getDamage() <= 0.0D)
+            if (player.getHealth() - event.getDamage() <= 0.0D)
             {
                 // The player would die from this hit
                 event.setDamage(0);
-
-                World world = player.getWorld();
-                Location deathLoc = player.getLocation().clone();
-                ItemStack[] items = player.getInventory().getContents().clone();
 
                 Player killer = null;
 
@@ -612,11 +754,27 @@ public abstract class Game implements Listener
                     }
                 }
 
-                eliminate(player, killer);
+                if (deathDropItems)
+                {
+                    spawnItems(player);
+                }
 
-                Arrays.stream(items).forEach(item -> world.dropItemNaturally(deathLoc, item));
+                eliminate(player, killer);
             }
         }
+    }
+
+    /**
+     * Spawns a player's items on death naturally
+     * @param player The player
+     */
+    private void spawnItems(Player player)
+    {
+        World world = player.getWorld();
+        Location deathLoc = player.getLocation().clone();
+        ItemStack[] items = player.getInventory().getContents().clone();
+
+        Arrays.stream(items).filter(Objects::nonNull).forEach(item -> world.dropItemNaturally(deathLoc, item));
     }
 
     @EventHandler
@@ -710,12 +868,9 @@ public abstract class Game implements Listener
         {
             player.sendMessage(C.GREEN + "The resource pack was loaded successfully!");
         }
-        else if (status == Status.DECLINED)
+        else if (status == Status.DECLINED && forceResourcePack)
         {
-            if (forceResourcePack)
-            {
-                player.kickPlayer(C.RED + "You must accept the resource pack to play this game");
-            }
+            player.kickPlayer(C.RED + "You must accept the resource pack to play this game");
         }
         else if (status == Status.FAILED_DOWNLOAD && forceResourcePack)
         {

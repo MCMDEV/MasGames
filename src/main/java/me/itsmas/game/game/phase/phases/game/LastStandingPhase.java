@@ -1,8 +1,11 @@
 package me.itsmas.game.game.phase.phases.game;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Iterables;
 import me.itsmas.game.game.Game;
 import me.itsmas.game.game.phase.GamePhase;
+import me.itsmas.game.game.team.Team;
+import me.itsmas.game.game.team.TeamGame;
+import org.bukkit.entity.Player;
 
 /**
  * A game phase where the last man standing wins
@@ -17,13 +20,32 @@ public class LastStandingPhase extends GamePhase
     @Override
     public void onUpdate()
     {
-        if (game.getPlayersSize() == 1)
+        if (game instanceof TeamGame)
         {
-            game.endGame(Lists.newArrayList(game.getPlayers(false)).get(0));
+            TeamGame tGame = (TeamGame) game;
+
+            if (tGame.getAliveTeams().length == 1)
+            {
+                Team team = tGame.getAliveTeams()[0];
+
+                game.endGame(team.getPlayers());
+            }
+            else if (tGame.getAliveTeams().length == 0)
+            {
+                game.endGame();
+            }
         }
-        else if (game.getPlayersSize() == 0)
+        else
         {
-            game.endGame();
+            if (game.getPlayersSize() == 1)
+            {
+                Player winner = Iterables.getFirst(game.getPlayers(false), null);
+                game.endGame(winner);
+            }
+            else if (game.getPlayersSize() == 0)
+            {
+                game.endGame();
+            }
         }
     }
 }

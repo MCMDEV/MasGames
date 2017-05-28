@@ -1,7 +1,9 @@
 package me.itsmas.game.game.phase.phases.lobby;
 
 import me.itsmas.game.game.Game;
+import me.itsmas.game.util.C;
 import org.bukkit.Sound;
+import org.bukkit.entity.Player;
 
 /**
  * The phase of a game where players are waiting in the lobby before the countdown
@@ -29,5 +31,11 @@ public class LobbyWaitingPhase extends LobbyPhase
 
             endPhase();
         }
+    }
+
+    @Override
+    public String getActionBar(Player player)
+    {
+        return C.BLUE + C.BOLD + "Waiting for players...";
     }
 }

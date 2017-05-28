@@ -46,7 +46,7 @@ public class GameManager extends JavaPlugin
      */
     private void initGame()
     {
-        GameType type = EnumUtils.getEnum(GameType.class, getConfig().getString("game"));
+        GameType type = EnumUtils.getEnum(GameType.class, getConfig().getString("game", GameType.values()[0].name()));
 
         if (type != null)
         {
@@ -55,8 +55,16 @@ public class GameManager extends JavaPlugin
             if (gameInst != null)
             {
                 game = gameInst;
+
+                Utils.log("Loading game of type " + type.toString() + " [" + type.name() + "]");
+                return;
             }
+
+            Utils.logErr("Game failed to load: Error creating game instance");
+            return;
         }
+
+        Utils.logErr("Game failed to load: Config game setting not valid");
     }
 
     @Override
