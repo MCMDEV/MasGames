@@ -118,7 +118,10 @@ public abstract class TeamGame extends Game
      */
     public void initTeams()
     {
-        broadcast(C.GREEN + C.BOLD + "Start your message with '" + C.YELLOW + teamChatPrefix + C.GREEN + C.BOLD + "' to talk in team chat");
+        if (teamChat)
+        {
+            broadcast(C.GREEN + C.BOLD + "Start your message with '" + C.YELLOW + teamChatPrefix + C.GREEN + C.BOLD + "' to talk in team chat");
+        }
 
         for (Team team : teams)
         {
