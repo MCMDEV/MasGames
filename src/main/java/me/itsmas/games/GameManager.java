@@ -48,7 +48,7 @@ public class GameManager extends JavaPlugin
      */
     private void initGame()
     {
-        GameType type = EnumUtils.getEnum(GameType.class, getConfig().getString("games", GameType.values()[0].name()));
+        GameType type = EnumUtils.getEnum(GameType.class, getConfig().getString("game", GameType.values()[0].name()));
 
         if (type != null)
         {

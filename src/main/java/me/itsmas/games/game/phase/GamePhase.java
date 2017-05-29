@@ -16,12 +16,12 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * The representation of a phase in a games
+ * The representation of a phase in a game
  */
 public abstract class GamePhase implements Listener
 {
     /**
-     * The games this phase is happening on
+     * The game this phase is running on
      */
     protected final Game game;
 
@@ -43,7 +43,7 @@ public abstract class GamePhase implements Listener
 
     /**
      * GamePhase constructor
-     * @param game The games this phase will occur on
+     * @param game The game this phase will occur on
      * @param ingame Whether this phase counts as ingame
      */
     public GamePhase(Game game, boolean ingame)
@@ -210,7 +210,7 @@ public abstract class GamePhase implements Listener
     }
 
     /**
-     * Method called when a games phase starts
+     * Method called when a game phase starts
      * To be overridden for desired behaviour
      */
     protected void onStart(){}
@@ -222,7 +222,7 @@ public abstract class GamePhase implements Listener
     public void onUpdate(){}
 
     /**
-     * Method called when a games phase ends
+     * Method called when a game phase ends
      * To be overridden for desired behaviour
      */
     protected void onEnd(){}

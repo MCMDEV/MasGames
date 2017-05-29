@@ -112,7 +112,7 @@ public abstract class TeamGame extends Game
     private Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 
     /**
-     * Initialises the games's teams
+     * Initialises the game's teams
      */
     public void initTeams()
     {

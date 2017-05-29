@@ -12,8 +12,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Handles scoreboard sidebars displayed to players
+ */
 public class ScoreboardManager implements Listener
 {
+    /**
+     * The plugin instance
+     */
     private final GameManager manager;
 
     public ScoreboardManager(GameManager manager)
@@ -31,6 +37,9 @@ public class ScoreboardManager implements Listener
         }.runTaskTimer(manager, 0L, 2L);
     }
 
+    /**
+     * Map linking player {@link UUID}s to {@link BoardWrapper}s
+     */
     private final Map<UUID, BoardWrapper> boards = new HashMap<>();
 
     @EventHandler

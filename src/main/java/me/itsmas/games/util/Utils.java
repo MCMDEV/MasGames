@@ -82,7 +82,7 @@ public class Utils
 
     /**
      * Assigns the script for restarting the server
-     * Allows the server to restart automatically once a games ends
+     * Allows the server to restart automatically once a game ends
      * @see SpigotConfig#restartScript
      */
     private static void setRestartScript()

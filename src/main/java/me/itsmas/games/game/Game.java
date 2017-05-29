@@ -61,7 +61,7 @@ public abstract class Game implements Listener
 
     /**
      * Gets the {@link GameType} of the current game
-     * @return The current games's type
+     * @return The current game's type
      */
     public final GameType getType()
     {
@@ -75,7 +75,7 @@ public abstract class Game implements Listener
 
     /**
      * Gets the map for this game
-     * @return This games's map
+     * @return This game's map
      */
     public final GameMap getMap()
     {
@@ -608,7 +608,7 @@ public abstract class Game implements Listener
     private GamePhase currentPhase;
 
     /**
-     * Reverts this games's phase to a lobby phase
+     * Reverts this game's phase to a lobby phase
      * <b>Only to be used when a countdown is cancelled after a player leaves</b>
      */
     public final void revertToLobby()
