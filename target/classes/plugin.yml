@@ -1,6 +1,0 @@
-name: MasGames
-author: Mas281
-website: http://itsmas.me
-version: 1.0
-
-main: me.itsmas.games.GameManager
